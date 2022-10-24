@@ -41,21 +41,6 @@ def find_S_point(ecg, R_peaks):
 		S_point.append(cnt)
 	return np.asarray(S_point)
 
-def find_Q_point(ecg, R_peaks):
-	num_peak=R_peaks.shape[0]
-	Q_point=list()
-	for index in range(num_peak):
-		i=R_peaks[index]
-		cnt=i
-		if cnt-1<0:
-			break
-		while ecg[cnt]>ecg[cnt-1]:
-			cnt-=1
-			if cnt<0:
-				break
-		Q_point.append(cnt)
-	return np.asarray(Q_point)
-
 def worker(name, labels):
     print("processing %s!" % name)
     X = []
@@ -68,7 +53,7 @@ def worker(name, labels):
             continue
         signal = signals[int((j - before) * sample):int((j + 1 + after) * sample)]
         signal, _, _ = st.filter_signal(signal, ftype='FIR', band='bandpass', order=int(0.3 * fs),
-                                        frequency=[3, 45], sampling_rate=fs) # Filtering the ecg signal to remove noise
+                                        frequency=[8, 20], sampling_rate=fs) # Filtering the ecg signal to remove noise
         # Find R peaks
         rpeaks, = hamilton_segmenter(signal, sampling_rate=fs) # Extract R-peaks
         rpeaks, = correct_rpeaks(signal, rpeaks=rpeaks, sampling_rate=fs, tol=0.1)
@@ -78,7 +63,6 @@ def worker(name, labels):
             continue
         
         speaks= find_S_point(signal, rpeaks)
-        qpeaks=find_Q_point(signal, rpeaks)
 
 
         rri_tm, rri_signal = rpeaks[1:] / float(fs), np.diff(rpeaks) / float(fs)
